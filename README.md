@@ -54,7 +54,25 @@ https://jehoontest.vercel.app/
 이번 작업을 통해 상태 관리와 타입 시스템에 대한 이해가 깊어지고, 앞으로는 초기 설계에 더 신경 써서 코드 품질을 높이며 팀 협업을 쉽게 할 수 있는 방향으로 나아가고자 합니다.
 
 </br> </br> </br> </br> 
-## Trouble 1: 모드 전환 시 editMode가 의도치 않게 켜지는 문제</br> </br> 
+## Trouble 1: 새로고침 후 상태 초기화 문제 (Zustand & Supabase)</br> </br> 
+### 문제</br> 
+Zustand를 사용하여 Kanban 보드의 상태를 관리했으나, 새로고침 시 상태가 초기화되면서 Supabase에서 데이터를 다시 불러와야 하는 문제가 발생함.</br>
+### 원인</br> 
+useEffect에서 데이터를 불러오기 때문에 새로고침 시 상태가 초기화됨</br>
+Next.js App Router에서 서버 데이터를 미리 가져오지 않아 클라이언트가 빈 상태로 시작됨</br>
+### 해결 </br> 
+서버 컴포넌트에서 Supabase 데이터를 미리 가져와 props로 전달</br> 
+클라이언트 컴포넌트에서 전달받은 초기 데이터를 상태로 설정하여 새로고침 시에도 유지</br> 
+### 결과 </br> 
+서버에서 initialBoards로 데이터를 전달하여 새로고침 후에도 빈 상태가 되지 않음</br> 
+상태 초기화 후에도 서버 데이터를 활용해 빠르게 화면을 렌더링 가능</br> 
+불필요한 API 호출 감소로 성능 최적화 효과 발생</br> </br> 
+🔗 [GitHub Comment #1](https://github.com/jehoonje/LJH_ToDoPage/pull/1)
+🔗 [Blog Post](https://martlet.tistory.com/entry/Zustand%EB%A1%9C-%EB%AA%A8%EB%93%9C-%EC%A0%84%ED%99%98-%EB%A1%9C%EC%A7%81-%EC%B5%9C%EC%A0%81%ED%99%94)
+</br> 
+
+
+## Trouble 2: 모드 전환 시 editMode가 의도치 않게 켜지는 문제</br> </br> 
 ### 문제</br> 
 Kanban 보드에서 editMode, deleteMode, errorMode 전환 시 editMode가 꺼지지 않음.
 deleteMode에서 다른 모드로 전환하면 editMode가 예기치 않게 활성화됨.
@@ -62,20 +80,10 @@ deleteMode에서 다른 모드로 전환하면 editMode가 예기치 않게 활�
 Zustand 스토어에서 toggleEditMode, toggleDeleteMode, toggleErrorMode 함수를 개선해 상호 배타적 로직 구현. 각 함수가 호출될 때 선택된 모드만 토글되고 나머지 모드는 false로 설정. KanbanHeader의 onClick 핸들러를 단순화해 Zustand에 의존하도록 수정.
 ### 결과</br> 
 모드 전환이 정상적으로 동작하며 불필요한 상태 충돌 제거. 페이지 응답 속도가 약간 개선됨(FCP 2.1s → 1.9s). 타입스크립트로 상태 타입을 엄격히 관리해 런타임 오류 감소.</br> </br> 
-🔗 GitHub Comment #1
-🔗 Blog Post
+🔗 [GitHub Comment #2](https://github.com/jehoonje/LJH_ToDoPage/pull/2)
+🔗 [Blog Post](https://martlet.tistory.com/entry/Zustand%EB%A1%9C-%EB%AA%A8%EB%93%9C-%EC%A0%84%ED%99%98-%EB%A1%9C%EC%A7%81-%EC%B5%9C%EC%A0%81%ED%99%94)
 </br> 
 </br> </br> 
-## Trouble 2: 타입스크립트에서 Zustand 상태 타입 오류로 컴파일 실패</br> </br> 
-### 문제 </br> 
-normalTodos와 errorTodos 상태 업데이트 시 'Todo[]' 형식은 'unknown' 형식에 할당할 수 없습니다 오류 발생.
-KanbanBoard 컴포넌트에서 todos prop 전달 시 타입 불일치로 빌드 실패.
-### 해결 </br> 
-Zustand 스토어에 create<KanbanState> 제네릭 타입을 명시해 상태와 액션 타입 정의. Todo 인터페이스 임포트를 모든 파일에서 통일하고, 타입 단언 대신 정확한 타입 지정으로 수정. 더미 데이터로 테스트하며 타입 오류 해결 확인.
-### 결과 </br> 
-컴파일 오류가 사라지고, 타입 안전성이 확보됨. 빌드 시간이 약간 단축(12s → 10s). 타입스크립트 디버깅 능력 향상.</br> </br> 
-🔗 GitHub Comment #2
-🔗 Blog Post
 
 
 </br> </br> </br> 
